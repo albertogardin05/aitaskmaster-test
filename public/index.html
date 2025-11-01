@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AITaskMaster</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            min-height: 600px;
+        }
+        
+        .login-section {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .login-section.hidden {
+            display: none;
+        }
+        
+        .app-section {
+            display: none;
+            flex: 1;
+            padding: 40px;
+            flex-direction: column;
+        }
+        
+        .app-section.active {
+            display: flex;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        h2 {
+            margin: 20px 0 15px 0;
+            color: #555;
+            font-size: 16px;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        input, textarea, select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #764ba2;
+        }
+        
+        .toggle-btn {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 20px;
+        }
+        
+        .toggle-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .error {
+            background: #fadbd8;
+            color: #c0392b;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .header h1 {
+            margin: 0;
+        }
+        
+        .logout-btn {
+            padding: 8px 16px;
+            background: #e74c3c;
+            font-size: 12px;
+        }
+        
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        
+        .add-task-form {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .add-task-form textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .tasks-list {
+            display: grid;
+            gap: 15px;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        
+        .task-card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .task-card h3 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 15px;
+        }
+        
+        .task-card p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .task-actions select,
+        .task-actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .badge.HIGH {
+            background: #fadbd8;
+            color: #c0392b;
+        }
+        
+        .badge.MEDIUM {
+            background: #fdeaa8;
+            color: #d68910;
+        }
+        
+        .badge.LOW {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .status-TODO {
+            background: #e8f4f8;
+            color: #2980b9;
+        }
+        
+        .status-IN_PROGRESS {
+            background: #fef5e7;
+            color: #d68910;
+        }
+        
+        .status-COMPLETED {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN SECTION -->
+        <div class="login-section" id="loginSection">
+            <div>
+                <h1>AITaskMaster 🎯</h1>
+                <form id="authForm" onsubmit="handleAuth(event)">
+                    <input type="email" id="email" placeholder="Email" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="submit" id="authBtn">Accedi</button>
+                </form>
+                <p style="text-align: center; margin-top: 20px;">
+                    <button type="button" class="toggle-btn" onclick="toggleAuthMode()">
+                        Non hai un account? Registrati
+                    </button>
+                </p>
+                <div id="authError" class="error"></div>
+            </div>
+        </div>
+        
+        <!-- APP SECTION -->
+        <div class="app-section" id="appSection">
+            <div class="header">
+                <h1>I Miei Task 📝</h1>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <form class="add-task-form" id="taskForm" onsubmit="addTask(event)">
+                <h2>Aggiungi Nuovo Task</h2>
+                <input type="text" id="taskTitle" placeholder="Titolo del task" required>
+                <textarea id="taskDescription" placeholder="Descrizione (opzionale)"></textarea>
+                <button type="submit">Aggiungi Task</button>
+            </form>
+            
+            <h2>I Tuoi Task</h2>
+            <div class="tasks-list" id="tasksList">
+                <p style="text-align: center; color: #999; padding: 20px;">Caricamento...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = window.location.origin + '/api';
+        let isLoginMode = true;
+        let token = localStorage.getItem('token');
+        let currentUser = localStorage.getItem('user');
+        
+        // Mostra la sezione corretta
+        if (token && currentUser) {
+            showAppSection();
+            loadTasks();
+        } else {
+            showLoginSection();
+        }
+        
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authBtn').textContent = isLoginMode ? 'Accedi' : 'Registrati';
+        }
+        
+        async function handleAuth(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const endpoint = isLoginMode ? '/auth/login' : '/auth/register';
+            
+            const errorDiv = document.getElementById('authError');
+            errorDiv.classList.remove('show');
+            
+            try {
+                const response = await fetch(API_URL + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Errore di autenticazione');
+                }
+                
+                token = data.access_token;
+                currentUser = data.user;
+                
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                
+                showAppSection();
+                loadTasks();
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.add('show');
+            }
+        }
+        
+        function showLoginSection() {
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('appSection').classList.remove('active');
+        }
+        
+        function showAppSection() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('appSection').classList.add('active');
+        }
+        
+        async function addTask(event) {
+            event.preventDefault();
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDescription').value;
+            
+            try {
+                const response = await fetch(API_URL + '/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ title, description })
+                });
+                
+                if (!response.ok) throw new Error('Errore nella creazione del task');
+                
+                document.getElementById('taskForm').reset();
+                loadTasks();
+            } catch (error) {
+                alert('Errore: ' + error.message);
+            }
+        }
+        
+        async function loadTasks() {
+            try {
+                const response = await fetch(API_URL + '/tasks', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (!response.ok) throw new Error('Errore nel caricamento');
+                
+                const data = await response.json();
+                const tasksList = document.getElementById('tasksList');
+                
+                if (data.tasks.length === 0) {
+                    tasksList.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">Nessun task. Crea il primo! 🚀</p>';
+                    return;
+                }
+                
+                tasksList.innerHTML = data.tasks.map(task => `
+                    <div class="task-card">
+                        <div>
+                            <h3>${escapeHtml(task.title)}</h3>
+                            <p>${escapeHtml(task.description || 'Nessuna descrizione')}</p>
+                        </div>
+                        <p>
+                            <span class="status-badge status-${task.status}">${task.status}</span>
+                            <span class="badge ${task.priority}">${task.priority}</span>
+                            ${task.category ? `<br><strong>Categoria:</strong> ${escapeHtml(task.category)}` : ''}
+                        </p>
+                        <div class="task-actions">
+                            <select onchange="updateTaskStatus(${task.id}, this.value)">
+                                <option value="TODO" ${task.status === 'TODO' ? 'selected' : ''}>Todo</option>
+                                <option value="IN_PROGRESS" ${task.status === 'IN_PROGRESS' ? 'selected' : ''}>In Progress</option>
+                                <option value="COMPLETED" ${task.status === 'COMPLETED' ? 'selected' : ''}>Completato</option>
+                            </select>
+                            <button class="delete-btn" onclick="deleteTask(${task.id})">Elimina</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('tasksList').innerHTML = '<p style="color: red; padding: 20px;">Errore nel caricamento dei task</p>';
+            }
+        }
+        
+        async function updateTaskStatus(taskId, newStatus) {
+            try {
+                const response = await fetch(API_URL + '/tasks/' + taskId, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (!response.ok) throw new Error('Errore');
+                loadTasks();
+            } catch (error) {
+                alert('Errore: ' + error.message);
+            }
+        }
+        
+        async function deleteTask(taskId) {
+            if (!confirm('Sicuro di voler eliminare questo task?')) return;
+            
+            try {
+                const response = await fetch(API_URL + '/tasks/' + taskId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (!response.ok) throw new Error('Errore');
+                loadTasks();
+            } catch (error) {
+                alert('Errore: ' + error.message);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            token = null;
+            currentUser = null;
+            showLoginSection();
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
